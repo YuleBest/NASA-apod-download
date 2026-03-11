@@ -1,0 +1,10 @@
+[project]
+name = "nasa-apod-downloader"
+version = "0.1.0"
+description = "NASA Astronomy Picture of the Day bulk downloader"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "requests>=2.32",
+    "rich>=13.9",
+]
