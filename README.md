@@ -7,10 +7,12 @@
 ```
 NASA-apod-downloader/
 ├── api-key.txt      # ⚠️ 你的 NASA API Key
+├── config.yaml      # 配置文件（目录、线程数、重试轮数等）
 ├── main.py          # 流水线入口：update → tryagain → organize
 ├── update.py        # 增量下载（自动检测最新日期，按天下载到今日）
 ├── tryagain.py      # 重试失败记录（explanation=null 且含 error_log）
 ├── organize.py      # 按月合并数据，输出到 dist/
+├── config.py        # 配置加载器（内部使用）
 ├── data/            # 每日原始 JSON
 └── dist/            # 按月合并的 JSON（如 2024-03.json）
 ```
@@ -51,6 +53,11 @@ uv run python main.py
 uv run python update.py      # 仅增量下载
 uv run python tryagain.py    # 仅重试失败
 uv run python organize.py    # 仅整理输出
+
+# 常用参数示例
+uv run python main.py --no-tui                        # 纯文本输出（适合 CI）
+uv run python main.py --workers 8 --max-retries 5    # 自定义线程数和重试轮数
+uv run python update.py --start 2025-01-01 --end 2025-06-30  # 指定日期范围
 ```
 
 ## 输出格式
@@ -72,12 +79,30 @@ uv run python organize.py    # 仅整理输出
 
 > `media_type` 和 `service_version` 字段在整理阶段会被自动删除。
 
+## 配置
+
+编辑 `config.yaml` 即可修改默认行为（无需更改脚本）：
+
+```yaml
+api_key_file: api-key.txt # API Key 文件路径
+api_rate_limit: 1000 # 每小时请求上限（超出时弹出警告）
+apod_start: "1995-06-16" # 最早可下载日期
+
+data_dir: data # 原始 JSON 存放目录
+dist_dir: dist # 按月合并的输出目录
+
+workers: 4 # 并发下载线程数
+max_retry_rounds: 3 # 流水线中 tryagain 最大重试轮数
+```
+
+> CLI 参数（如 `--workers 8`）优先级高于 `config.yaml`。
+
 ## 流水线说明
 
 ```
 main.py
  ├─ update.py    检测 data/ 中最新日期，下载次日至今日的数据
- ├─ tryagain.py  重试超时/网络错误记录，最多 3 轮，零失败时提前停止
+ ├─ tryagain.py  重试超时/网络错误记录，最多 N 轮，零失败时提前停止
  └─ organize.py  读取 data/，按月分组写入 dist/，跳过仍失败的记录
 ```
 
@@ -87,6 +112,7 @@ main.py
 | ---------- | ---------------------------- |
 | `requests` | HTTP 请求                    |
 | `rich`     | 终端 TUI（进度条、日志面板） |
+| `pyyaml`   | 解析 `config.yaml`           |
 
 ## LICENSE
 

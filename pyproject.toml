@@ -5,6 +5,7 @@ description = "NASA Astronomy Picture of the Day bulk downloader"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "pyyaml>=6.0.3",
     "requests>=2.32",
     "rich>=13.9",
 ]
